@@ -2,7 +2,23 @@
 
 <html>
 	<head>
+	
+	
+
 		<title>Search Engine</title>
+		  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>VisImageNavigator</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="public/stylesheets/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles -->
+    <link href="public/stylesheets/bio_style.css" rel="stylesheet">
+    <link href="public/stylesheets/myPagination.css" rel="stylesheet">
+    <link rel="stylesheet" href="public/stylesheets/ion.rangeSlider.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
 	</head>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 	<script src="js/jquery.min.js"></script>
@@ -20,15 +36,17 @@
 			border-radius: 20px;
 
 		}
+		
 	</style>
 
 	<body>
+	
+	
 		<div class="container">
 		<div class="row py-5">
 			<div class="col-10 mx-auto">
-			<form action="search.php" method="get" autocomplete="on">
-				<form method="post">
-					<div class="row">
+			<form action="search.php" method="post">
+				<div class="row">
 						<div class="col-10">
 							<input type="text" name="q" id="search" placeholder="search at josndata" class="form-control" required> 
 						</div>
@@ -36,38 +54,58 @@
 							<button type="submit" class="btn btn-primary" name="searchButton">Search</button><br>
 						</div>
 
-						<div class="col-12">
-							<a data-toggle="collapse" href="#advanceSearch">Advance Search</a>
-						</div>
+			
 					</div>
-				</form>
-				<div class="collapse col-10 py-3" id="advanceSearch" style="background: #F8F9F9; border-radius: 5px;">
+		
+				<div  style="background: #F8F9F9; border-radius: 5px;">
 					
-					<form method="post">
+				
 						<div class="row py-2">
 							<div class="col-6">
-								<label>search in datajosn :</label>
-								<input type="text" name="Rname" class="form-control">
+							
+							
+							
+								
+							
+								<label>Search in datajosn by:</label>
+								<select " name="s" style=" height: 25px;cursor: pointer; " id="s">
+								
+								<option value="1" selected>patentID</option>
+								<option value="2" >Figure ID</option>
+								
+								
+								</select>
+
+
+		 
+						
 							</div>
+
+							
 							
 						</div>
 
-						<div class="row py-2">
-							<div class="col-6">
-								<label>Search in datajosn :</label>
-								<input type="text" name="Rtype" class="form-control">
-							</div>
-
-							
-							
-						</div>
-
-						<button type="submit" class="btn btn-success" name="advanceSearchButton">Advance Search</button>
 						
 					</form>
 				</div>
 			</div>
 		</div>
+<nav aria-label="...">
+  <ul class="pagination">
+    <li class="page-item disabled">
+      <a class="page-link" href="#" tabindex="-1">Previous</a>
+    </li>
+    <li class="page-item"><a class="page-link" href="#">1</a></li>
+    <li class="page-item active">
+      <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
+    </li>
+    <li class="page-item"><a class="page-link" href="#">3</a></li>
+    <li class="page-item">
+      <a class="page-link" href="#">Next</a>
+    </li>
+  </ul>
+</nav>
+
 
 		<div class="row">
 			<dir class="col-10 mx-auto">
@@ -82,7 +120,7 @@
 </html>
 
 <?php
-
+echo "<div class='row'>";
 require 'vendor/autoload.php';
 
 use Elasticsearch\ClientBuilder;
@@ -90,17 +128,19 @@ use Elasticsearch\ClientBuilder;
 $client = ClientBuilder::create() // (2)
 ->build(); // (3)
 
-if(isset($_GET['q'])) { // (4)
+if(isset($_POST['searchButton'])) { // (4)
 
-$q = $_GET['q'];
+$q = $_POST['q'];
 
+$searchby=$_POST['s'];
 
 
 
 $q=preg_replace("/<|>/i", "",$q);
 
 
-
+if($searchby=="1")
+{
 //-- Change Here -->
 $query = $client->search([
 'body' => [
@@ -108,6 +148,7 @@ $query = $client->search([
 'bool' => [
 'should' => [
 'match' => ['patentID'  => $q],
+//'match' => ['aspect'  => $q],
 
 
 ]
@@ -115,31 +156,143 @@ $query = $client->search([
 ]
 ]
 ]);
+
+}
+
+if($searchby=="2")
+{
+//-- Change Here -->
+$query = $client->search([
+'body' => [
+'query' => [ // (5)
+'bool' => [
+'should' => [
+'match' => ['figid'  => $q],
+//'match' => ['aspect'  => $q],
+
+
+]
+]
+]
+]
+]);
+
+}
+
+
 if($query['hits']['total'] >=1 ) { // (6)
 $results = $query['hits']['hits'];
-
+$x = 0;
  foreach ($results as $i)
  {
-$qq=$i['_source']['patentID'];
+	 
+	// if($searchby=="2")$qq=$i['_source']['figid '];
+	 
 
-for ($x = 0; $x <= 6; $x++)
-{
+
+$qq=$i['_source']['patentID'];
+$dd=$i['_source']['description'];
+//for ($x = 0; $x <= 6; $x++)
+//{
 ?>
 
-	<img src='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'  width="12%" />
 
 
+	<div class="col-3" style="border: 1px solid black">
+		<a href='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>' target='_blank'>
+			<img src='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'  width='50%'  />
+			
+			
+			
+		</a>
+		
+		<div style="text-align='center;background-color:00ee99'">
+		
+		
+		
+		<?php
+		echo $dd;
+		?>
+		
+	</div>
+	</div>
+	<br />
+	<br />
+	<br />
+	
 <?php
 //echo "<br />";
-}
+//}
+	$x++;
  }
  
 
 //print_r($results);
 echo count($results);
+//echo $x;
 
 }
 }
+//"aspect": "bottom pl"
+//USD0871916-20200107
+
+	if(isset($_POST['advanceSearchButton'])){
+		$Rname = $_POST['Rname'];
+		$Rtype = $_POST['Rtype'];
+		$Rname=preg_replace("/<|>/i", "",$Rname);
+		$Rtype=preg_replace("/<|>/i", "",$Rtype);
+
+
+
+		//-- Change Here -->
+		$query = $client->search([
+		'body' => [
+		'query' => [ // (5)
+		'bool' => [
+		'should' => [
+		'match' => ['patentID'  => $Rname],
+		'match' => ['aspect'  => $Rtype],
+
+
+		]
+		]
+		]
+		]
+		]);
+		if($query['hits']['total'] >=1 ) { // (6)
+		$results = $query['hits']['hits'];
+		$x = 0;
+		 foreach ($results as $i)
+		 {
+			$qq=$i['_source']['patentID'];
+		//$qq2=$i['_source']['patentID'];
+		
+		/*if($Rname != ""){
+		
+		?>
+			<p>
+				<a href='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'>
+					<img src='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'  width="12%" />
+				</a>
+			</p>
+		<?php
+		}*/
+		if($Rname !="" || $Rtype != ""){
+		?>
+			<div class="col-3"  style="border: 1px solid black">
+				<a href='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'>
+					<img src='../jsonFiles/dataset/<?php echo "$qq"."-D0000".$x.".png"; ?>'  width="90%"  height="250px" />
+				</a>
+			</div>
+			
+		<?php
+		}
+		
+			$x++;
+		 }
+		}
+	}
+echo "</div>";
 
 ?>
 
